@@ -69,6 +69,19 @@ h3, h4, h5 {
       font-weight: 300;
     }
   }
+
+  .resultRow, .wpmRows {
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 2;
+    align-items: center;
+    justify-content: center;
+
+    span {
+      margin: 0;
+    }
+  }
 }
 
 .inputContainer {
