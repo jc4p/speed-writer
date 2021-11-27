@@ -2,17 +2,14 @@ import React, { useState, useEffect } from "react";
 
 // Home function that is reflected across the site
 export default function Home() {
-  const [ticks, setTicks] = useState(-1)
+  const [ticks, setTicks] = useState(0)
   const [chars, setChars] = useState(0)
-  const [charsLastReset, setCharsLastReset] = useState(0)
-  const [wpm, setWpm] = useState("")
-  
+  const [needsReset, setNeedsReset] = useState(false)
   const padTwoDigits = (num) => { return num < 10 ? `0${num}` : `${num}` }
 
   let updateInterval;
   
   const getDuration = () => {
-    if (ticks === -1) { return '00:00' }
     const minutes = Math.floor(ticks / 60)
     const seconds = minutes > 0 ? ticks - (minutes * 60) : ticks
     return `${padTwoDigits(minutes)}:${padTwoDigits(seconds)}`
@@ -29,7 +26,8 @@ export default function Home() {
     const fullText = e.target.value
     const thisChar = e.nativeEvent.data
     if (fullText === thisChar) {
-      setTicks(0)
+      console.log('need to reset')
+      setNeedsReset(true)
     }
   }
   
@@ -38,18 +36,19 @@ export default function Home() {
   }
   
   useEffect(() => {
-    if (ticks === 0) {
+    if (needsReset) {
       if (updateInterval) {
         clearInterval(updateInterval)
       }
 
-      setTicks(ticks + 1)
+      setTicks(1)
       // eslint-disable-next-line react-hooks/exhaustive-deps
       updateInterval = setInterval(() => {
        setTicks(ticks => ticks + 1)
       }, 1000)
+      setNeedsReset(false)
     }
-  }, [ticks])
+  }, [needsReset])
 
   return (
     <main role="main" className="wrapper">
