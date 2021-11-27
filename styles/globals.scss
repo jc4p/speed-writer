@@ -1,0 +1,88 @@
+/* Basic page style resets */
+* {
+  box-sizing: border-box;
+  background: #E2EAEB;
+}
+[hidden] {
+  display: none !important;
+}
+
+.content {
+  padding: 0 80px;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.innerContent {
+  max-width: 640px;
+  min-width: 70vw;
+  display: flex;
+  flex-direction: column;
+}
+
+h1, h2 {
+  font-family: "Ideal Sans A", "Ideal Sans B";
+  font-style: normal;
+  font-weight: 700;
+}
+
+h3, h4, h5 {
+  font-family: "Ideal Sans A", "Ideal Sans B";
+  font-style: normal;
+  font-weight: 400;
+}
+
+.resultsContainer {
+  display: flex;
+  flex-align: column;
+  width: 100%;
+  justify-content: space-around;
+  border: 1px solid #A0987C;
+  background: #F7CFE1;
+  
+  .resultBox {
+    padding: 5px 15px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    text-align: center;
+    background: transparent;
+    
+    h4 {
+      margin: 0;
+      margin-top: 10px;
+      margin-bottom: 7px;
+      background: transparent;
+      font-size: 18px;
+      line-height: 18px;
+      font-weight: 400;
+    }
+    
+    span {
+      margin-bottom: 10px;
+      background: transparent;
+      font-size: 20px;
+      font-family: "Whitney A", "Whitney B";
+      font-style: normal;
+      font-weight: 300;
+    }
+  }
+}
+
+.inputContainer {
+  display: flex;
+  min-height: 640px;
+  background: red;
+  
+  textarea {
+    width: 100%;
+    border: 1px solid #A0987C;
+    padding: 20px;
+    font-family: "Ideal Sans A", "Ideal Sans B";
+    font-style: normal;
+    font-weight: 300;
+    font-size: 22px;
+  }
+}
