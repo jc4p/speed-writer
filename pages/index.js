@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 
 // Home function that is reflected across the site
 export default function Home() {
-  const [ticks, setTicks] = useState(0)
+  const [ticks, setTicks] = useState(-1)
   const [chars, setChars] = useState(0)
   const [charsLastReset, setCharsLastReset] = useState(0)
   const [wpm, setWpm] = useState("")
@@ -12,9 +12,9 @@ export default function Home() {
   let updateInterval;
   
   const getDuration = () => {
-    const durationSeconds = ticks
-    const minutes = Math.floor(durationSeconds / 60)
-    const seconds = minutes > 0 ? durationSeconds - (minutes * 60) : durationSeconds
+    if (ticks === -1) { return '00:00' }
+    const minutes = Math.floor(ticks / 60)
+    const seconds = minutes > 0 ? ticks - (minutes * 60) : ticks
     return `${padTwoDigits(minutes)}:${padTwoDigits(seconds)}`
   }
   
@@ -24,21 +24,26 @@ export default function Home() {
     const rawVal = (chars / 5) / (ticks / 60)
     return Math.round(rawVal)
   }
+
+  const onTextInput = (e) => {
+    const fullText = e.target.value
+    const thisChar = e.nativeEvent.data
+    if (fullText === thisChar) {
+      setTicks(0)
+    }
+  }
   
   const textUpdate = (e) => {
-    if (e.target.value.length === 0) {
-      setCharsLastReset(0)
-    }
-
     setChars(e.target.value.length)
   }
   
   useEffect(() => {
-    if (ticks == 0) {
+    if (ticks === 0) {
       if (updateInterval) {
         clearInterval(updateInterval)
       }
 
+      setTicks(ticks + 1)
       // eslint-disable-next-line react-hooks/exhaustive-deps
       updateInterval = setInterval(() => {
        setTicks(ticks => ticks + 1)
@@ -65,7 +70,7 @@ export default function Home() {
             </div>
           </div>
           <div className="inputContainer">
-            <textarea onChange={e => textUpdate(e)}></textarea>
+            <textarea onChange={e => textUpdate(e)} onInput={e => onTextInput(e)}></textarea>
           </div>
         </div>
       </div>
