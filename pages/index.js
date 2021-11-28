@@ -3,15 +3,21 @@ import React, { useState, useEffect, useRef } from "react";
 export default function Home() {
   const [ticks, setTicks] = useState(0)
   const [needsReset, setNeedsReset] = useState(false)
+  const [needsPause, setNeedsPause] = useState(false)
   const clickEvents = useRef([])
-  const latestRollingCount = useRef(0)
-  const lastEventsLength = useRef(0)
+  const clickEventsInWindow = useRef([])
+  const lastWindowWPM = useRef(0)
 
-  let updateInterval;
+  let updateIntervalId = useRef(0)
+  let pauseIntervalId = useRef(0)
   
   const padTwoDigits = (num) => { return num < 10 ? `0${num}` : `${num}` }
 
-  function getClickCount() {
+  function getClickCount(onlyInWindow) {
+    if (onlyInWindow) {
+      return clickEventsInWindow.current.length
+    }
+
     return clickEvents.current.length
   }
   
@@ -32,55 +38,15 @@ export default function Home() {
   }
 
   const getRealtimeWPM = () => {
-    const clickCount = clickEvents.current.length
-    if (clickCount === 0) { return 0 }
+    const clickCount = getClickCount(true)
+    if (clickCount === 0) { return lastWindowWPM.current }
+    if (clickCount < 12) { return lastWindowWPM.current }
 
-    // find click events within a time window of [-3s, now]
-    const windowMs = 2000
-    const now = Date.now()
-    const windowStart = now - windowMs
-    let firstItem = -1
-    let lastItem = -1
+    // width in seconds
+    const windowDuration = 2
 
-    for (let i = 0; i < clickEvents.current.length; i++) {
-      const time = clickEvents.current[i].time
-      if (firstItem == -1 && time >= windowStart) {
-        firstItem = i
-      }
-      else if (time <= now) {
-        lastItem = i
-      }
-    }
-
-    if (lastItem == -1) {
-      lastItem = clickEvents.current.length
-    }
-
-    if (firstItem < 0) {
-      if (lastItem > 0) {
-        return `PAUSED`
-      }
-
-      return 0
-    }
-    if (lastItem < 2) {
-      return latestRollingCount.current
-    }
-
-    const rollingItems = clickEvents.current.slice(firstItem, lastItem)
-    if (rollingItems.length === 0) {
-      return `PAUSED`
-    }
-
-    const deltaStart = rollingItems[0].time
-    const lastEntry = rollingItems[rollingItems.length - 1]
-    const diffMs = lastEntry.time - deltaStart
-    const diffSeconds = diffMs / 1000
-    const diffMinutes = diffSeconds / 60
-    //console.log(`Typed ${rollingItems.length} chars in ${diffSeconds}s / ${diffMinutes}m, ${Math.ceil(rollingItems.length / 5)}`)
-    const wpm = Math.round(Math.ceil(rollingItems.length / 5) / diffMinutes)
-    latestRollingCount.current = wpm
-    lastEventsLength.current = clickEvents.current.length
+    const wpm = Math.round((clickCount / 5) / (windowDuration / 60))
+    lastWindowWPM.current = wpm
 
     return wpm
   }
@@ -97,15 +63,37 @@ export default function Home() {
   const onTextInput = (e) => {
     const fullText = e.target.value
     const thisChar = e.nativeEvent.data
+    const now = Date.now()
+
     if (fullText === thisChar) {
       console.log('need to reset')
       setNeedsReset(true)
+    } else {
+      // character entry, if we're paused start back up
+      if (needsPause) {
+        console.log('need to resume')
+        setNeedsPause(false)
+      }
     }
 
     clickEvents.current.push({
       event: e.nativeEvent,
-      time: Date.now()
+      time: now
     })
+
+    // the minus here is the window width in ms
+    const windowStart = now - 2000
+    clickEventsInWindow.current = clickEvents.current.filter(f => f.time >= windowStart)
+
+    if (pauseIntervalId.current) {
+      clearTimeout(pauseIntervalId.current)
+    }
+
+    pauseIntervalId.current = setTimeout(() => {
+      console.log('need to pause')
+      setNeedsPause(true)
+      pauseIntervalId.current = null
+    }, 900)
   }
   
   const textUpdate = (e) => {
@@ -114,19 +102,31 @@ export default function Home() {
   
   useEffect(() => {
     if (needsReset) {
-      if (updateInterval) {
-        clearInterval(updateInterval)
+      if (updateIntervalId.current) {
+        clearInterval(updateIntervalId.current)
       }
 
       clickEvents.current = []
       setTicks(1)
       // eslint-disable-next-line react-hooks/exhaustive-deps
-      updateInterval = setInterval(() => {
+      updateIntervalId.current = setInterval(() => {
        setTicks(ticks => ticks + 1)
       }, 10)
       setNeedsReset(false)
     }
-  }, [needsReset])
+
+    if (needsPause) {
+      clearInterval(updateIntervalId.current)
+      updateIntervalId.current = null
+    } else if (!needsPause) {
+      if (!updateIntervalId.current) {
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        updateIntervalId.current = setInterval(() => {
+          setTicks(ticks => ticks + 1)
+        }, 10)
+      }
+    }
+  }, [needsReset, needsPause])
 
   return (
     <main role="main" className="wrapper">
