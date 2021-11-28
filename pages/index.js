@@ -40,7 +40,6 @@ export default function Home() {
   const getRealtimeWPM = () => {
     const clickCount = getClickCount(true)
     if (clickCount === 0) { return lastWindowWPM.current }
-    if (clickCount < 12) { return lastWindowWPM.current }
 
     // width in seconds
     const windowDuration = 2
